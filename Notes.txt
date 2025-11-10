@@ -1,0 +1,23 @@
+az login -t <tenantid>
+
+myResourceGroup = "dev101125-rg"
+location = "eastus"
+SUBSCRIPTION_ID="<subscriptionid>"
+TenantId=<tenantid>
+
+az group create -n myResourceGroup -l location
+
+
+#Create ACR
+MYACR=devacr101125
+az acr create --name $MYACR --resource-group $myResourceGroup --sku basic
+
+MYACR=devacr101125
+myAKSCluster=devaks101125
+az aks create --name $myAKSCluster --resource-group $myResourceGroup --generate-ssh-keys --attach-acr $MYACR --node-vm-size standard_b2as_v2 ----node-count 1
+
+# Attach using acr-name
+az aks update --name $myAKSCluster --resource-group $myResourceGroup --attach-acr $MYACR
+
+#Create SP to access resource group with contributor permissions
+az ad sp create-for-rbac --name "ghActionAzureVote" --scope subscriptions//$SUBSCRIPTION_ID//resourceGroups//$myResourceGroup --role Contributor --json-auth
